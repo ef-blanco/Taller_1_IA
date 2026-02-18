@@ -47,46 +47,53 @@ def uniformCostSearch(problem: SearchProblem):
     """
     Search the node of least total cost first.
     """
-    costo_total = 0
-    camino = []
-    visitados = []
+    respuesta = []
+    explorados = []
     cola_prioridad = utils.PriorityQueue()
-    nodo_actual = problem.getStartState()
     s = Directions.SOUTH
     n = Directions.NORTH
     w = Directions.WEST
     e = Directions.EAST
     dict_direcciones = {"South":s,"North":n,"West":w,"East":e}
     
-    while (not problem.isGoalState(nodo_actual)):
-        # Se marca como visitado el nodo en el que se sitúa el robot
-        visitados.append(nodo_actual)
+    # En la cola de prioridad se guardará una tupla donde el las primera posición se ecnontrará la posición (x,y) del robot
+    # y en la segunda posición estará el costo total hasta dicha posición
+    
+    #Guardamos dentor de la tupla en 0:tupla de la posición en el mapa, 1:costo total al nodo y 2:camino a seguir para llegar al nodo desde el inicio
+    cola_prioridad.push((problem.getStartState(),0,[]),0)
+    
+    alcanzo_goal = problem.isGoalState(problem.getStartState())
+    while (not alcanzo_goal)or(not cola_prioridad.isEmpty):
+        # Se saca el primer nodo el la cola de prioridad
+        nodo_actual, costo_total, camino = cola_prioridad.pop()
+        
+        # Si sacó de la cola un nodo que ya visité antes, entonces sacó el siguiente en la cola
+        if nodo_actual in explorados:
+            nodo_actual, costo_total, camino = cola_prioridad.pop()
+        
+        # Miramos si ya llegamos al objetivo
+        alcanzo_goal = problem.isGoalState(nodo_actual)
+        if(alcanzo_goal):
+            respuesta = camino
         # Se obtienen los sucesores del nodo en el que está actualmente el robot
         sucesores = problem.getSuccessors(nodo_actual)
-        # Añadimos a la cola de prioridad todos los nodos vecinos con prioridad igual a sus pesos (el peso que toma ir a ellos)
+        
+        # Añadimos a la cola de prioridad todos los nodos vecinos con prioridad igual al peso total que toma llegar a ellos
         for sucesor in sucesores:
-            cola_prioridad.push(sucesor,sucesor[2])
-        # Se saca el nodo al que se llega con menor costo y se le asigna al actual
-        mejor_sucesor = cola_prioridad.pop()
+            if(sucesor[0] not in explorados):
+                #Al añadir los sucesores:
+                # 1 - sucesor: tupla de 2 posiciones con la pos en el mapa
+                # 2 - costo total al sucesor
+                # 3 - lista con las acciones que se deben tomar para llegar al sucesor con peso igual al valor en 2
+                new_path = camino[:]
+                new_path.append(dict_direcciones[sucesor[1]])
+                
+                cola_prioridad.push((sucesor[0],sucesor[2]+costo_total,new_path),sucesor[2]+costo_total)
         
-        #Si el nodo ya fue visitado se vista el que le sigue
-        while mejor_sucesor[0] not in visitados  and  not cola_prioridad.isEmpty():
-            mejor_sucesor = cola_prioridad.pop()
-        
-        costo_total+=mejor_sucesor[2]
-        camino.append(dict_direcciones[mejor_sucesor[1]])
-        nodo_actual = mejor_sucesor[0]
-        
-        # Vaciamos la cola de prioridad para que en el proximo paso solo tengamos los sucesores del nuevo nodo
-        while not cola_prioridad.isEmpty():
-            elem = cola_prioridad.pop()
-        
-        return camino
-        
-        
-        
-    # TODO: Add your code here
-    utils.raiseNotDefined()
+        # Se marca como explorado el nodo en el que se sitúa el robot
+        explorados.append(nodo_actual)
+    
+    return respuesta
 
 
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
