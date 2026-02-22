@@ -6,7 +6,7 @@ from algorithms.heuristics import nullHeuristic
 import time
 
 
-#Pongo esta vaina para calcular las complejidades jiji gracias chat por tanto 
+#Metodo que imprime las complejidades temporal y espacial para la ejecución
 def imprimir_resultado(nombre, T_formula, S_formula, nodos_expandidos, memoria_maxima):
     print(f"\n--- [ANÁLISIS DE {nombre}] ---")
     print(f"1. Temporal: {T_formula} => {nodos_expandidos} operaciones")
