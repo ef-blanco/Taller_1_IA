@@ -53,12 +53,8 @@ def survivorHeuristic(state: Tuple[Tuple, Any], problem: MultiSurvivorProblem):
     """
     # TODO: Add your code here
     posicion, grid = state
-    sobrevivientes = []
-
-    for i in range(len(grid)):
-        for j in range(len(grid[i])):
-            if grid[i][j]:
-                sobrevivientes.append((i, j))
+    sobrevivientes = grid.asList()
+    
 
     if not sobrevivientes:
         return 0
