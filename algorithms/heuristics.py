@@ -18,7 +18,7 @@ def manhattanHeuristic(state, problem):
     # TODO: Add your code here
     
     estadoActual = state
-    estadoMeta = problem.goal()
+    estadoMeta = problem.goal
 
     manhathan = abs(estadoActual[0] - estadoMeta[0]) + abs(estadoActual[1] - estadoMeta[1])
     return manhathan
@@ -30,7 +30,7 @@ def euclideanHeuristic(state, problem):
     """
     # TODO: Add your code here
     estadoInicial = state
-    estadoMeta = problem.goal()
+    estadoMeta = problem.goal
     euclidiana = ((estadoInicial[0] - estadoMeta[0]) ** 2 + (estadoInicial[1] - estadoMeta[1]) ** 2) ** 0.5
     return euclidiana
     utils.raiseNotDefined()

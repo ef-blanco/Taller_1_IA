@@ -13,6 +13,25 @@ def imprimir_resultado(nombre, T_formula, S_formula, nodos_expandidos, memoria_m
     print(f"2. Espacial: {S_formula} => {memoria_maxima} nodos en memoria")
     print("-" * 30)
     
+#Esto también es para las complejidades c:
+def formatear_complejidad(total_ops, n):
+    """
+    Devuelve la complejidad en forma de fracción o multiplicación de n.
+    Por ejemplo:
+        total_ops = n/3 -> "O(n/3)"
+        total_ops = 2*n -> "O(2*n)"
+    """
+    factor = total_ops / n
+    
+    if abs(factor - round(factor)) < 1e-6:
+        return f"O({int(round(factor))}*n)"
+    else:
+        denominador = round(1/factor)
+        if abs(factor - 1/denominador) < 1e-6:
+            return f"O(n/{denominador})"
+        else:
+            return f"O({factor:.2f}*n)"
+    
 def tinyHouseSearch(problem: SearchProblem):
     """
     Returns a sequence of moves that solves tinyHouse. For any other building, the
@@ -55,7 +74,13 @@ def depthFirstSearch(problem: SearchProblem):
         estadoActual, camino = pila.pop()
 
         if problem.isGoalState(estadoActual):
+            n = len(visitados)            
+            T_formula = formatear_complejidad(nodos_expandidos, n)
+            S_formula = formatear_complejidad(max_memoria, n)
+            imprimir_resultado("DFS", T_formula, S_formula, nodos_expandidos, max_memoria)
             imprimir_resultado("DFS", "O(b^m)", "O(b * m)", nodos_expandidos, max_memoria)
+            print(f"Número de movimientos calculados: {len(camino)}")
+
             return camino
 
         if estadoActual not in visitados:
@@ -88,6 +113,7 @@ def breadthFirstSearch(problem: SearchProblem):
 
         if problem.isGoalState(estadoActual):
             imprimir_resultado("BFS", "O(b^d)", "O(b^d)", nodos_expandidos, max_memoria)
+            print(f"Número de movimientos calculados: {len(camino)}")
             return camino
 
         if estadoActual not in visitados:
@@ -111,7 +137,7 @@ def uniformCostSearch(problem: SearchProblem):
     estadoInicial = problem.getStartState()
     colaPrioridad = utils.PriorityQueue()
     colaPrioridad.push((estadoInicial, [], 0), 0)
-    mejorCosto = {}
+    mejorCosto = {estadoInicial: 0}
 
     while not colaPrioridad.isEmpty():
         
@@ -119,22 +145,30 @@ def uniformCostSearch(problem: SearchProblem):
         if memoria_actual > max_memoria:
             max_memoria = memoria_actual
         estadoActual, camino, costoActual = colaPrioridad.pop()
+        
+        # Si ya llegamos aquí con un costo menor, ignoramos esta rama
+        if costoActual > mejorCosto.get(estadoActual, float('inf')):
+            continue
 
         if estadoActual in mejorCosto and costoActual > mejorCosto[estadoActual]:
             continue
 
         mejorCosto[estadoActual] = costoActual
-        nodos_expandidos += 1
 
         if problem.isGoalState(estadoActual):
             imprimir_resultado("UCS", "O(b^(C*/ε))", "O(b^(C*/ε))", nodos_expandidos, max_memoria)
+            print(f"Número de movimientos calculados: {len(camino)}")
+
             return camino
+        nodos_expandidos += 1
 
         for sucesor, accion, costo in problem.getSuccessors(estadoActual):
-            nuevoCamino = camino + [accion]
             nuevoCosto = costoActual + costo
-            colaPrioridad.push((sucesor, nuevoCamino, nuevoCosto), nuevoCosto)
-
+            
+            if sucesor not in mejorCosto or nuevoCosto < mejorCosto[sucesor]:
+                mejorCosto[sucesor] = nuevoCosto
+                nuevoCamino = camino + [accion]
+                colaPrioridad.push((sucesor, nuevoCamino, nuevoCosto), nuevoCosto)
     return []
 
 
@@ -149,12 +183,13 @@ def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
     estadoInicial = problem.getStartState()
     colaPrioridad = utils.PriorityQueue()
     colaPrioridad.push((estadoInicial, [], 0), heuristic(estadoInicial, problem))
-    mejorCosto = {}
+    mejorCosto = {estadoInicial: 0}
     nodos_expandidos = 0
     
     while not colaPrioridad.isEmpty():
         estadoActual, camino, costoActual = colaPrioridad.pop()
 
+       
         if estadoActual in mejorCosto and costoActual > mejorCosto[estadoActual]:
             continue
         mejorCosto[estadoActual] = costoActual
@@ -163,14 +198,21 @@ def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
 
         if problem.isGoalState(estadoActual):
             imprimir_resultado("A*", "O(b^(C*/ε))", "O(b^(C*/ε))", nodos_expandidos, max_memoria)
+            print(f"Número de movimientos calculados: {len(camino)}")
+
             return camino
 
         for sucesor, accion, costo in problem.getSuccessors(estadoActual):
             nuevoCamino = camino + [accion]
             nuevoCosto = costoActual + costo
-            prioridad = nuevoCosto + heuristic(sucesor, problem)
-            colaPrioridad.push((sucesor, nuevoCamino, nuevoCosto), prioridad)
-    
+            
+            if sucesor not in mejorCosto or nuevoCosto < mejorCosto[sucesor]:
+                mejorCosto[sucesor] = nuevoCosto
+                
+                prioridad= nuevoCosto + heuristic(sucesor, problem)
+                nuevoCamino = camino + [accion]
+                colaPrioridad.push((sucesor, nuevoCamino, nuevoCosto), prioridad)
+        
     tiempoFin = time.time()
     print("Tiempo de ejecución: {:.2f} segundos".format(tiempoFin - tiempoInicio), "segundos")
     return []
