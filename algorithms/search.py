@@ -130,46 +130,53 @@ def uniformCostSearch(problem: SearchProblem):
     """
     Search the node of least total cost first.
     """
-    #variable para el calculo de complejidades
-    inicio_t = time.time()    
-    nodos_expandidos = 0
-    max_memoria = 0
-    estadoInicial = problem.getStartState()
-    colaPrioridad = utils.PriorityQueue()
-    colaPrioridad.push((estadoInicial, [], 0), 0)
-    mejorCosto = {estadoInicial: 0}
-
-    while not colaPrioridad.isEmpty():
+    respuesta = []
+    explorados = []
+    cola_prioridad = utils.PriorityQueue()
+    s = Directions.SOUTH
+    n = Directions.NORTH
+    w = Directions.WEST
+    e = Directions.EAST
+    dict_direcciones = {"South":s,"North":n,"West":w,"East":e}
+    
+    # En la cola de prioridad se guardará una tupla donde el las primera posición se ecnontrará la posición (x,y) del robot
+    # y en la segunda posición estará el costo total hasta dicha posición
+    
+    #Guardamos dentor de la tupla en 0:tupla de la posición en el mapa, 1:costo total al nodo y 2:camino a seguir para llegar al nodo desde el inicio
+    cola_prioridad.push((problem.getStartState(),0,[]),0)
+    
+    alcanzo_goal = problem.isGoalState(problem.getStartState())
+    while (not alcanzo_goal)or(not cola_prioridad.isEmpty):
+        # Se saca el primer nodo el la cola de prioridad
+        nodo_actual, costo_total, camino = cola_prioridad.pop()
         
-        memoria_actual = len(mejorCosto) + len(colaPrioridad.heap)
-        if memoria_actual > max_memoria:
-            max_memoria = memoria_actual
-        estadoActual, camino, costoActual = colaPrioridad.pop()
+        # Si sacó de la cola un nodo que ya visité antes, entonces sacó el siguiente en la cola
+        if nodo_actual in explorados:
+            nodo_actual, costo_total, camino = cola_prioridad.pop()
         
-        # Si ya llegamos aquí con un costo menor, ignoramos esta rama
-        if costoActual > mejorCosto.get(estadoActual, float('inf')):
-            continue
-
-        if estadoActual in mejorCosto and costoActual > mejorCosto[estadoActual]:
-            continue
-
-        mejorCosto[estadoActual] = costoActual
-
-        if problem.isGoalState(estadoActual):
-            imprimir_resultado("UCS", "O(b^(C*/ε))", "O(b^(C*/ε))", nodos_expandidos, max_memoria)
-            print(f"Número de movimientos calculados: {len(camino)}")
-
-            return camino
-        nodos_expandidos += 1
-
-        for sucesor, accion, costo in problem.getSuccessors(estadoActual):
-            nuevoCosto = costoActual + costo
-            
-            if sucesor not in mejorCosto or nuevoCosto < mejorCosto[sucesor]:
-                mejorCosto[sucesor] = nuevoCosto
-                nuevoCamino = camino + [accion]
-                colaPrioridad.push((sucesor, nuevoCamino, nuevoCosto), nuevoCosto)
-    return []
+        # Miramos si ya llegamos al objetivo
+        alcanzo_goal = problem.isGoalState(nodo_actual)
+        if(alcanzo_goal):
+            respuesta = camino
+        # Se obtienen los sucesores del nodo en el que está actualmente el robot
+        sucesores = problem.getSuccessors(nodo_actual)
+        
+        # Añadimos a la cola de prioridad todos los nodos vecinos con prioridad igual al peso total que toma llegar a ellos
+        for sucesor in sucesores:
+            if(sucesor[0] not in explorados):
+                #Al añadir los sucesores:
+                # 1 - sucesor: tupla de 2 posiciones con la pos en el mapa
+                # 2 - costo total al sucesor
+                # 3 - lista con las acciones que se deben tomar para llegar al sucesor con peso igual al valor en 2
+                new_path = camino[:]
+                new_path.append(dict_direcciones[sucesor[1]])
+                
+                cola_prioridad.push((sucesor[0],sucesor[2]+costo_total,new_path),sucesor[2]+costo_total)
+        
+        # Se marca como explorado el nodo en el que se sitúa el robot
+        explorados.append(nodo_actual)
+    
+    return respuesta
 
 
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
